@@ -16,6 +16,7 @@ SPECIES_PATH = './../data/audio/raw/'
 
 
 def _make_dir(dir: str):
+    ''' Create a new directory if not already exists '''
     try:
         os.mkdir(dir)
     except FileExistsError as ex:
@@ -25,6 +26,7 @@ def _make_dir(dir: str):
 
 
 def download_json_data():
+    ''' Download JSON data from xeno-canto API into files for SPECIES_TO_DOWNLOAD '''
     for species in SPECIES_TO_DOWNLOAD:
         _make_dir(f'{SPECIES_PATH}{species}')
         _make_dir(f'{SPECIES_PATH}{species}/json')
@@ -46,7 +48,10 @@ def download_json_data():
 
 
 def download_audio_data():
+    ''' Download the MP3 audio files for each SPECIES_TO_DOWNLOAD '''
+
     def read_json_file(filename: str):
+        ''' Reads a given JSON file into dict '''
         json_file = open(filename)
         data = json.load(json_file)
         json_file.close()
@@ -90,10 +95,12 @@ def download_audio_data():
 
 
 def get_json(species: str, page: int = 1):
+    ''' Request JSON from xeno-canto '''
     spec = species.split('_')
     query = spec[0]
 
     def relevant_json(data: json):
+        ''' Removes unwanted fields in returned JSON from xeno-canto '''
         rel_json = copy.deepcopy(data)
         rel_json['recordings'] = []
         for recording in data['recordings']:
@@ -119,6 +126,7 @@ def get_json(species: str, page: int = 1):
 
 
 def save_json(species: str, data: json):
+    ''' Save a given JSON dict to json file '''
     page = data['page']
     with open(
         f'{SPECIES_PATH}{species}/json/{species}_{page}.json', 'w+'
