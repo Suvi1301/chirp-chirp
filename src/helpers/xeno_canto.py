@@ -32,10 +32,11 @@ def download_json_data():
         _make_dir(f'{SPECIES_PATH}{species}/json')
         data = get_json(species)
         save_json(species, data)
+        print(f'Saved page 1 for {species}')
         if data['numPages'] > 1:
             i = 2
             with Bar(
-                f'Saving Page for {species}',
+                f'Saving {data["numPages"]} pages for {species}',
                 suffix='%(percent)d%%',
                 max=data['numPages'] - 1,
             ) as bar:
@@ -44,7 +45,7 @@ def download_json_data():
                     save_json(species, data)
                     i += 1
                     bar.next()
-                print(f'{data["numPages"]} pages saved for {species}')
+                print(f'\n{data["numPages"]} pages saved for {species}')
 
 
 def download_audio_data():
@@ -64,7 +65,7 @@ def download_audio_data():
         )
         record_df = pd.DataFrame(data_p1['recordings'])
 
-        for i in range(1, data_p1['numPages'] + 1):
+        for i in range(2, data_p1['numPages'] + 1):
             data = read_json_file(
                 f'{SPECIES_PATH}{species}/json/{species}_{i}.json'
             )
