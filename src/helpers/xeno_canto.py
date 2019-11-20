@@ -3,9 +3,11 @@ import urllib.request
 import copy
 import sys
 import os
+import wget
 import pandas as pd
 
 from docopt import docopt
+from progress.bar import Bar
 
 XENO_CANTO_URL = 'https://www.xeno-canto.org/api/2/recordings?query='
 DESIRED_RECORDING_ATT = ('en', 'file', 'id', 'length', 'cnt')
@@ -13,30 +15,78 @@ SPECIES_TO_DOWNLOAD = []
 SPECIES_PATH = './../data/audio/raw/'
 
 
-def download_json_data():
-    def make_dir(dir: str):
-        try:
-            os.mkdir(dir)
-        except FileExistsError as ex:
-            print(f'Directory ({dir}) already exists.')
-        except OSError as ex:
-            print(f'ERROR: Failed to create directory {dir}. Reason="{ex}"')
+def _make_dir(dir: str):
+    try:
+        os.mkdir(dir)
+    except FileExistsError as ex:
+        print(f'Directory ({dir}) already exists.')
+    except OSError as ex:
+        print(f'ERROR: Failed to create directory {dir}. Reason="{ex}"')
 
+
+def download_json_data():
     for species in SPECIES_TO_DOWNLOAD:
-        make_dir(f'{SPECIES_PATH}{species}')
-        make_dir(f'{SPECIES_PATH}{species}/json')
+        _make_dir(f'{SPECIES_PATH}{species}')
+        _make_dir(f'{SPECIES_PATH}{species}/json')
         data = get_json(species)
         save_json(species, data)
         if data['numPages'] > 1:
             i = 2
-            while i <= data['numPages']:
-                data = get_json(species, page=i)
-                save_json(species, data)
-                i += 1
+            with Bar(
+                f'Saving Page for {species}',
+                suffix='%(percent)d%%',
+                max=data['numPages'] - 1,
+            ) as bar:
+                while i <= data['numPages']:
+                    data = get_json(species, page=i)
+                    save_json(species, data)
+                    i += 1
+                    bar.next()
+                print(f'{data["numPages"]} pages saved for {species}')
 
 
 def download_audio_data():
-    pass
+    def read_json_file(filename: str):
+        json_file = open(filename)
+        data = json.load(json_file)
+        json_file.close()
+        return data
+
+    for species in SPECIES_TO_DOWNLOAD:
+        _make_dir(f'{SPECIES_PATH}{species}/mp3')
+        data_p1 = read_json_file(
+            f'{SPECIES_PATH}{species}/json/{species}_1.json'
+        )
+        record_df = pd.DataFrame(data_p1['recordings'])
+
+        for i in range(1, data_p1['numPages'] + 1):
+            data = read_json_file(
+                f'{SPECIES_PATH}{species}/json/{species}_{i}.json'
+            )
+            record_df = record_df.append(pd.DataFrame(data['recordings']))
+
+        record_df.to_csv(index=False)
+
+        url_list = []
+        for file in record_df['file'].tolist():
+            url_list.append(f'https:{file}')
+
+        with open(f'{SPECIES_PATH}{species}/{species}_urls.txt', 'w+') as f:
+            i = 1
+            print(f'Writing urls for {species} to file')
+            with Bar(
+                f'Downloading MP3s for {species}',
+                suffix='%(percent)d%%',
+                max=len(url_list),
+            ) as bar:
+                for url in url_list:
+                    f.write(f'{url}\n')
+                    wget.download(
+                        url,
+                        out=f'{SPECIES_PATH}{species}/mp3/{species}_{i}.mp3',
+                    )
+                    i += 1
+                    bar.next()
 
 
 def get_json(species: str, page: int = 1):
@@ -74,7 +124,6 @@ def save_json(species: str, data: json):
         f'{SPECIES_PATH}{species}/json/{species}_{page}.json', 'w+'
     ) as output_file:
         json.dump(data, output_file, indent=4)
-    print(f'Saved {species} {page}/{data["numPages"]}')
 
 
 def main():
@@ -101,7 +150,7 @@ def main():
         else:
             print(f'Desired Species count not provided. Using {species_count}')
 
-    with open(args['filename']) as input_file:
+    with open(args['<filename>']) as input_file:
         line = input_file.readline()
         line_count = 0
         while line and line_count < species_count:
@@ -113,6 +162,10 @@ def main():
         download_json_data()
 
     elif args['--audio-only']:
+        download_audio_data()
+
+    else:
+        download_json_data()
         download_audio_data()
 
 
