@@ -3,6 +3,9 @@ import urllib.request
 import copy
 import sys
 import os
+import pandas as pd
+
+from docopt import docopt
 
 XENO_CANTO_URL = 'https://www.xeno-canto.org/api/2/recordings?query='
 DESIRED_RECORDING_ATT = ('en', 'file', 'id', 'length', 'cnt')
@@ -10,7 +13,7 @@ SPECIES_TO_DOWNLOAD = []
 SPECIES_PATH = './../data/audio/raw/'
 
 
-def download_data():
+def download_json_data():
     def make_dir(dir: str):
         try:
             os.mkdir(dir)
@@ -30,6 +33,10 @@ def download_data():
                 data = get_json(species, page=i)
                 save_json(species, data)
                 i += 1
+
+
+def download_audio_data():
+    pass
 
 
 def get_json(species: str, page: int = 1):
@@ -70,23 +77,44 @@ def save_json(species: str, data: json):
     print(f'Saved {species} {page}/{data["numPages"]}')
 
 
-if __name__ == "__main__":
+def main():
+    args = docopt(
+        """
+    Usage:
+        xeno_canto.py [options] <filename>
+    
+    Options:
+        --species NUM       No. of Species
+        --all-species       For all species in input file
+        --audio-only        Download audio files only
+        --json-only         Download json files only
+    """
+    )
     species_count = 1
     try:
-        species_count = int(sys.argv[2])
-    except TypeError as ex:
-        print(f'ERROR: arg 2 must be integer')
-    except IndexError as ex:
-        print(f'Desired Species count not provided. Using {species_count}')
+        species_count = int(args['--species'])
+    except TypeError:
+        print(f'ERROR: --species must be an integer')
+    except IndexError:
+        if args.get('--all-species'):
+            species_count = 100
+        else:
+            print(f'Desired Species count not provided. Using {species_count}')
 
-    try:
-        with open(sys.argv[1]) as input_file:
+    with open(args['filename']) as input_file:
+        line = input_file.readline()
+        line_count = 0
+        while line and line_count < species_count:
+            SPECIES_TO_DOWNLOAD.append(line.strip())
             line = input_file.readline()
-            line_count = 0
-            while line and line_count < species_count:
-                SPECIES_TO_DOWNLOAD.append(line.strip())
-                line = input_file.readline()
-                line_count += 1
-        download_data()
-    except IndexError as ex:
-        print(f'ERROR: Missing input file name. Reason="{ex}"')
+            line_count += 1
+
+    if args['--json-only']:
+        download_json_data()
+
+    elif args['--audio-only']:
+        download_audio_data()
+
+
+if __name__ == "__main__":
+    main()
