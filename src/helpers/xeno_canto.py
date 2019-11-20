@@ -1,16 +1,35 @@
 import json
-import urllib
+import urllib.request
 import copy
 import sys
+import os
 
 XENO_CANTO_URL = 'https://www.xeno-canto.org/api/2/recordings?query='
 DESIRED_RECORDING_ATT = ('en', 'file', 'id', 'length', 'cnt')
 SPECIES_TO_DOWNLOAD = []
-JSON_DATA_PATH = '../data/raw/json/'
+SPECIES_PATH = './../data/audio/raw/'
 
 
 def download_data():
-    pass
+    def make_dir(dir: str):
+        try:
+            os.mkdir(dir)
+        except FileExistsError as ex:
+            print(f'Directory ({dir}) already exists.')
+        except OSError as ex:
+            print(f'ERROR: Failed to create directory {dir}. Reason="{ex}"')
+
+    for species in SPECIES_TO_DOWNLOAD:
+        make_dir(f'{SPECIES_PATH}{species}')
+        make_dir(f'{SPECIES_PATH}{species}/json')
+        data = get_json(species)
+        save_json(species, data)
+        if data['numPages'] > 1:
+            i = 2
+            while i <= data['numPages']:
+                data = get_json(species, page=i)
+                save_json(species, data)
+                i += 1
 
 
 def get_json(species: str, page: int = 1):
@@ -39,12 +58,16 @@ def get_json(species: str, page: int = 1):
         json_data = json.loads(data)
         return relevant_json(json_data)
     except Exception as ex:
-        print(f'ERROR: getting json from xeno-canto. Reason="{ex}""')
+        print(f'ERROR: Could not get json from xeno-canto. Reason="{ex}""')
 
 
-def save_json(species: str, data: json, page: int):
-    with open(f'{JSON_DATA_PATH}{species}_{page}.json', 'w') as output_file:
-        json.dump(data, output_file)
+def save_json(species: str, data: json):
+    page = data['page']
+    with open(
+        f'{SPECIES_PATH}{species}/json/{species}_{page}.json', 'w+'
+    ) as output_file:
+        json.dump(data, output_file, indent=4)
+    print(f'Saved {species} {page}/{data["numPages"]}')
 
 
 if __name__ == "__main__":
