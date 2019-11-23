@@ -3,6 +3,7 @@ import numpy as np
 import pydub
 import struct
 import os
+import json
 import scipy.io.wavfile as wavfile
 
 from enum import Enum
@@ -52,12 +53,56 @@ def read_file(file_path: str, format=AudioFormat.MP3):
 
 
 def convert_wav(filename: str, species: str):
-    file = read_file(
-        f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}', AudioFormat.MP3
-    )
-    file.export(
-        f'{SPECIES_PROCESSED_AUDIO_PATH}{species}/{filename}.wav', format="wav"
-    )
+    try:
+        file = read_file(
+            f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}',
+            AudioFormat.MP3,
+        )
+        file.export(
+            f'{SPECIES_PROCESSED_AUDIO_PATH}{species}/{filename}.wav',
+            format="wav",
+        )
+        normalise_wav(f'{SPECIES_PROCESSED_AUDIO_PATH}{species}/{filename}.wav')
+        delete_mp3(filename, species)
+    except Exception as ex:
+        print(f'ERROR: Failed to export wav file {filename}. Reason="{ex}"')
+
+
+def normalise_wav(filename: str):
+    rate, audio_data = wavfile.read(filename)
+    if len(audio_data.shape) > 1:
+        left_channel = audio_data[:, 0]
+    else:
+        left_channel = audio_data
+    wavfile.write(f'{filename}', rate, left_channel)
+
+
+def normalise_wavs():
+    for species in SPECIES_TO_CONVERT:
+        json_file = open(f'{SPECIES_RAW_AUDIO_PATH}{species}/json/{species}_1.json')
+        data = json.load(json_file)
+        json_file.close()
+        num_files = int(data['numRecordings'])
+        if num_files > 0:
+            with Bar(
+                f'Normalising {species} files to WAV',
+                suffix='%(percent)d%%',
+                max=num_files,
+            ) as bar:
+                for i in range(1, num_files + 1):
+                    try:
+                        normalise_wav(
+                            f'{SPECIES_PROCESSED_AUDIO_PATH}{species}/{species}_{i}.wav'
+                        )
+                    except Exception as ex:
+                        print(
+                            f'ERROR: Failed to noramlise {species}_{i}.wav. Reason="{ex}"'
+                        )
+                    bar.next()
+
+
+def delete_mp3(filename: str, species):
+    os.system(f'rm {SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}.mp3')
 
 
 def read_wav(filename: str):
@@ -116,14 +161,14 @@ def main():
     Usage:
         audio_helper.py [options] <filename> <convert>
     
-        <convert>: "wav", "spec" or "wave"
+        <convert>: "wav", "spec", "wave", "norm"
     Options:
         --species NUM       No. of Species
         --all-species       For all species in input file
     """
     )
 
-    if args['<convert>'] not in ('wav', 'spec', 'wav'):
+    if args['<convert>'] not in ('wav', 'spec', 'wave', 'norm'):
         print('Invalid argument for <convert>')
         return
 
@@ -153,6 +198,8 @@ def main():
     elif args['<convert>'] == 'spec':
         pass
         # TODO: Generate Spectrogram
+    elif args['<convert>'] == 'norm':
+        normalise_wavs()
     else:
         pass
         # TODO: Generate Wave
