@@ -22,6 +22,7 @@ class AudioFormat(Enum):
 
 
 def _dir_size(dir: str):
+    ''' Returns no. of files for a given directory of species '''
     try:
         onlyfiles = next(os.walk(dir))[2]
         return len(onlyfiles)
@@ -40,6 +41,7 @@ def _make_dir(dir: str):
 
 
 def read_file(file_path: str, format=AudioFormat.MP3):
+    ''' Reads an MP3 file '''
     if format == AudioFormat.MP3:
         try:
             file = pydub.AudioSegment.from_mp3(f'{file_path}.mp3')
@@ -53,6 +55,7 @@ def read_file(file_path: str, format=AudioFormat.MP3):
 
 
 def convert_wav(filename: str, species: str):
+    ''' Converts an audio file into a mono channel WAV '''
     try:
         file = read_file(
             f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}',
@@ -62,13 +65,16 @@ def convert_wav(filename: str, species: str):
             f'{SPECIES_PROCESSED_AUDIO_PATH}{species}/{filename}.wav',
             format="wav",
         )
-        normalise_wav(f'{SPECIES_PROCESSED_AUDIO_PATH}{species}/{filename}.wav')
+        normalise_wav(
+            f'{SPECIES_PROCESSED_AUDIO_PATH}{species}/{filename}.wav'
+        )
         delete_mp3(filename, species)
     except Exception as ex:
         print(f'ERROR: Failed to export wav file {filename}. Reason="{ex}"')
 
 
 def normalise_wav(filename: str):
+    ''' Converts the stereo to mono '''
     rate, audio_data = wavfile.read(filename)
     if len(audio_data.shape) > 1:
         left_channel = audio_data[:, 0]
@@ -78,8 +84,11 @@ def normalise_wav(filename: str):
 
 
 def normalise_wavs():
+    ''' Normalise all the WAV files for a species '''
     for species in SPECIES_TO_CONVERT:
-        json_file = open(f'{SPECIES_RAW_AUDIO_PATH}{species}/json/{species}_1.json')
+        json_file = open(
+            f'{SPECIES_RAW_AUDIO_PATH}{species}/json/{species}_1.json'
+        )
         data = json.load(json_file)
         json_file.close()
         num_files = int(data['numRecordings'])
@@ -102,6 +111,7 @@ def normalise_wavs():
 
 
 def delete_mp3(filename: str, species):
+    ''' Delete an mp3 file '''
     os.system(f'rm {SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}.mp3')
 
 
@@ -124,6 +134,7 @@ def read_wav(filename: str):
 
 
 def process_to_wav():
+    ''' Converts to WAV for all given species '''
     for species in SPECIES_TO_CONVERT:
         _make_dir(f'{SPECIES_PROCESSED_AUDIO_PATH}{species}')
         file_count = _dir_size(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3')

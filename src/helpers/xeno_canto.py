@@ -26,6 +26,7 @@ def _make_dir(dir: str):
 
 
 def _dir_size(species: str, data: str = 'mp3'):
+    ''' Returns no. of files for a given directory of species '''
     try:
         onlyfiles = next(os.walk(f'{SPECIES_PATH}{species}/{data}'))[2]
         return len(onlyfiles)
