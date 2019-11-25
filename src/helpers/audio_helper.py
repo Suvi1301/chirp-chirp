@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pydub
 import struct
 import os
 import json
@@ -10,6 +9,7 @@ from enum import Enum
 from docopt import docopt
 from progress.bar import Bar
 from moviepy.editor import AudioFileClip
+from pydub import AudioSegment
 
 SPECIES_RAW_AUDIO_PATH = "./../data/audio/raw/"
 SPECIES_PROCESSED_AUDIO_PATH = "./../data/audio/processed/"
@@ -45,7 +45,7 @@ def read_file(file_path: str, format=AudioFormat.MP3):
     ''' Reads an MP3 file '''
     if format == AudioFormat.MP3:
         try:
-            file = pydub.AudioSegment.from_mp3(f'{file_path}.mp3')
+            file = AudioSegment.from_mp3(f'{file_path}.mp3')
             return file
         except Exception as ex:
             print(f'Error reading: {file_path}. Reason="{ex}"')
@@ -53,6 +53,51 @@ def read_file(file_path: str, format=AudioFormat.MP3):
     else:
         # TODO: Implement other formats
         return
+
+
+def split_mp3(file_path: str, interval: int = 10):
+    start_time = 0
+    end_time = interval
+    try:
+        audio = AudioSegment.from_mp3(f'{file_path}.mp3')
+        duration = audio.duration_seconds
+        if duration < interval + 5:
+            return
+        left_over = duration % interval
+        num_splits = int(duration / interval)
+        if left_over < 5:
+            num_splits -= 1
+        for i in range(0, num_splits):
+            start_time = 10 * i * 1000  # milliseconds from a 10s interval
+            end_time = (interval + (10 * i)) * 1000
+            extract = audio[start_time:end_time]
+            extract.export(f'{file_path}_{i}.mp3')
+        extract = audio[10 * num_splits * 1000 : duration * 1000]
+        extract.export(f'{file_path}_{num_splits}.mp3')
+        os.system(f'rm {file_path}.mp3')
+    except Exception as ex:
+        print(f'ERROR: Failed to read {file_path}. Reason="{ex}"')
+
+
+def process_split(interval: int = 10):
+    print(f'Starting mp3 split using interval {interval}')
+    for species in SPECIES_TO_CONVERT:
+        num_files = _dir_size(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3')
+        with Bar(
+            f'Splitting MP3s for {species} in {interval}s intervals',
+            suffix='%(percent)d%%',
+            max=num_files,
+        ) as bar:
+            for i in range(1, num_files + 1):
+                try:
+                    split_mp3(
+                        f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{species}_{i}'
+                    )
+                except Exception as ex:
+                    print(
+                        f'ERROR: Failed to split {species}_{i}.mp3. Reason="{ex}"'
+                    )
+                bar.next()
 
 
 def convert_wav(filename: str, species: str):
@@ -169,16 +214,20 @@ def spectrogram(
         if format == AudioFormat.WAV:
             audio_data = read_wav(filename, species)
         elif format == AudioFormat.MP3:
-            audio = AudioFileClip(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}.mp3')
+            audio = AudioFileClip(
+                f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}.mp3'
+            )
             audio_data = audio.to_soundarray()
-            audio_data = audio_data[:,0]
+            audio_data = audio_data[:, 0]
         else:
             return NotImplementedError()
         fig = plt.figure()
         plt.specgram(audio_data, Fs=frame_rate, NFFT=nfft, window=window)
         fig.savefig(f'{SPECTROGRAM_PATH}{species}/{filename}.png')
     except Exception as ex:
-        print(f'ERROR: Failed to convert {filename} to Spectrogram. Reason="{ex}"')
+        print(
+            f'ERROR: Failed to convert {filename} to Spectrogram. Reason="{ex}"'
+        )
 
 
 def generate_spectrograms(
@@ -220,12 +269,13 @@ def main():
     Usage:
         audio_helper.py [options] <filename> <convert>
     
-        <convert>: "wav", "spec-mp3", "spec-wav", "wave", "norm"
+        <convert>: "wav", "spec-mp3", "spec-wav", "wave", "norm", "split"
     Options:
         --species NUM       No. of Species
         --all-species       For all species in input file
         --nfft NUM          NFFT for generating spectrogram
         --frame-rate NUM    Frame rate to use for spectrogram
+        --split-interval    Interval size for splitting audio
     """
     )
 
@@ -235,6 +285,7 @@ def main():
         'spec-mp3',
         'wave',
         'norm',
+        'split',
     ):
         print('Invalid argument for <convert>')
         return
@@ -268,6 +319,11 @@ def main():
         generate_spectrograms(format=AudioFormat.WAV)
     elif args['<convert>'] == 'norm':
         normalise_wavs()
+    elif args['<convert>'] == 'split':
+        split_interval = 10
+        if args['--split-interval']:
+            split_interval = int(args['--split-interval'])
+        process_split(split_interval)
     else:
         pass
         # TODO: Generate Wave
