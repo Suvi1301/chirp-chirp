@@ -9,10 +9,11 @@ import scipy.io.wavfile as wavfile
 from enum import Enum
 from docopt import docopt
 from progress.bar import Bar
+from moviepy.editor import AudioFileClip
 
 SPECIES_RAW_AUDIO_PATH = "./../data/audio/raw/"
 SPECIES_PROCESSED_AUDIO_PATH = "./../data/audio/processed/"
-spectrograms_file_path = "./../data/images/"
+SPECTROGRAM_PATH = "./../data/images/spectrograms/"
 SPECIES_TO_CONVERT = []
 
 
@@ -115,10 +116,10 @@ def delete_mp3(filename: str, species):
     os.system(f'rm {SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}.mp3')
 
 
-def read_wav(filename: str):
+def read_wav(filename: str, species: str):
     ''' Read processed file and return the audio data to be plotted. '''
-    sampling_freq, signal_data = wavfile.read(
-        f'{SPECIES_PROCESSED_AUDIO_PATH}{filename}.wav'
+    _, signal_data = wavfile.read(
+        f'{SPECIES_PROCESSED_AUDIO_PATH}{species}/{filename}.wav'
     )
     try:
         if len(signal_data.shape) > 1:
@@ -130,7 +131,7 @@ def read_wav(filename: str):
             f'Error reading single channel from filename: {filename}. Reason="{ex}"'
         )
 
-    return (sampling_freq, single_channel_data)
+    return single_channel_data
 
 
 def process_to_wav():
@@ -152,18 +153,65 @@ def process_to_wav():
                 bar.next()
 
 
-def generate_spectrogram(
-    filename: str, nfft: int = 512, window=np.hamming(512)
+def spectrogram(
+    filename: str,
+    species: str,
+    nfft: int = 512,
+    window=np.hamming(512),
+    format=AudioFormat.MP3,
+    frame_rate: int = 44100,
 ):
-    ''' Plot a spectrogram for audio file and save '''
-    sampling_freq, signal_data = read_wav(filename)
-    fig = plt.figure()
-    # TODO: Figure out overlap.
-    plt.specgram(signal_data, Fs=sampling_freq, NFFT=nfft, window=window)
-    # TODO: Modify plot to ignore axis labels etc.
-    plt.xlabel('Time')
-    plt.ylabel('Frequency')
-    fig.savefig(f'{spectrograms_file_path}{filename}.png')
+    ''' Plot a spectrogram for WAV file and save '''
+    # TODO: Overlap?
+    # TODO: Ignoring frequency range
+
+    try:
+        if format == AudioFormat.WAV:
+            audio_data = read_wav(filename, species)
+        elif format == AudioFormat.MP3:
+            audio = AudioFileClip(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}.mp3')
+            audio_data = audio.to_soundarray()
+            audio_data = audio_data[:,0]
+        else:
+            return NotImplementedError()
+        fig = plt.figure()
+        plt.specgram(audio_data, Fs=frame_rate, NFFT=nfft, window=window)
+        fig.savefig(f'{SPECTROGRAM_PATH}{species}/{filename}.png')
+    except Exception as ex:
+        print(f'ERROR: Failed to convert {filename} to Spectrogram. Reason="{ex}"')
+
+
+def generate_spectrograms(
+    format=AudioFormat.MP3,
+    nfft: int = 512,
+    window=np.hamming(512),
+    frame_rate: int = 44100,
+):
+    ''' Generates spectrograms for all required species '''
+    for species in SPECIES_TO_CONVERT:
+        _make_dir(f'{SPECTROGRAM_PATH}{species}')
+        if format == AudioFormat.MP3:
+            file_count = _dir_size(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3')
+        elif format == AudioFormat.WAV:
+            file_count = _dir_size(f'{SPECIES_PROCESSED_AUDIO_PATH}{species}')
+        with Bar(
+            f'Converting {species} to Spectrograms',
+            suffix='%(percent)d%%',
+            max=file_count,
+        ) as bar:
+            for i in range(1, file_count + 1):
+                if not os.path.isfile(
+                    f'{SPECTROGRAM_PATH}{species}/{species}_{i}.png'
+                ):
+                    spectrogram(
+                        f'{species}_{i}',
+                        species,
+                        nfft,
+                        window,
+                        format,
+                        frame_rate,
+                    )
+                bar.next()
 
 
 def main():
@@ -172,14 +220,22 @@ def main():
     Usage:
         audio_helper.py [options] <filename> <convert>
     
-        <convert>: "wav", "spec", "wave", "norm"
+        <convert>: "wav", "spec-mp3", "spec-wav", "wave", "norm"
     Options:
         --species NUM       No. of Species
         --all-species       For all species in input file
+        --nfft NUM          NFFT for generating spectrogram
+        --frame-rate NUM    Frame rate to use for spectrogram
     """
     )
 
-    if args['<convert>'] not in ('wav', 'spec', 'wave', 'norm'):
+    if args['<convert>'] not in (
+        'wav',
+        'spec-wav',
+        'spec-mp3',
+        'wave',
+        'norm',
+    ):
         print('Invalid argument for <convert>')
         return
 
@@ -206,9 +262,10 @@ def main():
 
     if args['<convert>'] == 'wav':
         process_to_wav()
-    elif args['<convert>'] == 'spec':
-        pass
-        # TODO: Generate Spectrogram
+    elif args['<convert>'] == 'spec-mp3':
+        generate_spectrograms(format=AudioFormat.MP3)
+    elif args['<convert>'] == 'spec-wav':
+        generate_spectrograms(format=AudioFormat.WAV)
     elif args['<convert>'] == 'norm':
         normalise_wavs()
     else:
