@@ -204,7 +204,7 @@ def spectrogram(
     nfft: int = 512,
     window=np.hamming(512),
     format=AudioFormat.MP3,
-    frame_rate: int = 44100,
+    frame_rate: int = 22050,
 ):
     ''' Plot a spectrogram for WAV file and save '''
     # TODO: Overlap?
@@ -222,8 +222,11 @@ def spectrogram(
         else:
             return NotImplementedError()
         fig = plt.figure()
-        plt.specgram(audio_data, Fs=frame_rate, NFFT=nfft, window=window)
-        fig.savefig(f'{SPECTROGRAM_PATH}{species}/{filename}.png')
+        plt.specgram(
+            audio_data, Fs=frame_rate, NFFT=nfft, window=window, cmap='inferno'
+        )
+        fig.savefig(f'{SPECTROGRAM_PATH}{species}/{filename}.jpg')
+        plt.close(fig)
     except Exception as ex:
         print(
             f'ERROR: Failed to convert {filename} to Spectrogram. Reason="{ex}"'
@@ -234,7 +237,7 @@ def generate_spectrograms(
     format=AudioFormat.MP3,
     nfft: int = 512,
     window=np.hamming(512),
-    frame_rate: int = 44100,
+    frame_rate: int = 22050,
 ):
     ''' Generates spectrograms for all required species '''
     for species in SPECIES_TO_CONVERT:
@@ -248,18 +251,19 @@ def generate_spectrograms(
             suffix='%(percent)d%%',
             max=file_count,
         ) as bar:
-            for i in range(1, file_count + 1):
-                if not os.path.isfile(
-                    f'{SPECTROGRAM_PATH}{species}/{species}_{i}.png'
-                ):
-                    spectrogram(
-                        f'{species}_{i}',
-                        species,
-                        nfft,
-                        window,
-                        format,
-                        frame_rate,
-                    )
+            for file in os.listdir(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3'):
+                if file.endswith('.mp3'):
+                    if not os.path.isfile(
+                        f'{SPECTROGRAM_PATH}{species}/{file[:-4]}.jpg'
+                    ):
+                        spectrogram(
+                            f'{file[:-4]}',
+                            species,
+                            nfft,
+                            window,
+                            format,
+                            frame_rate,
+                        )
                 bar.next()
 
 
