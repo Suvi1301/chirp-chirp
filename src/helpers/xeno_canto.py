@@ -25,27 +25,41 @@ def _make_dir(dir: str):
         print(f'ERROR: Failed to create directory {dir}. Reason="{ex}"')
 
 
+def _dir_size(species: str, data: str = 'mp3'):
+    ''' Returns no. of files for a given directory of species '''
+    try:
+        onlyfiles = next(os.walk(f'{SPECIES_PATH}{species}/{data}'))[2]
+        return len(onlyfiles)
+    except OSError:
+        print(f'ERROR: Could not read no. of files in {species}')
+
+
 def download_json_data():
     ''' Download JSON data from xeno-canto API into files for SPECIES_TO_DOWNLOAD '''
     for species in SPECIES_TO_DOWNLOAD:
         _make_dir(f'{SPECIES_PATH}{species}')
         _make_dir(f'{SPECIES_PATH}{species}/json')
         data = get_json(species)
-        save_json(species, data)
-        print(f'Saved page 1 for {species}')
-        if data['numPages'] > 1:
-            i = 2
-            with Bar(
-                f'Saving {data["numPages"]} pages for {species}',
-                suffix='%(percent)d%%',
-                max=data['numPages'] - 1,
-            ) as bar:
-                while i <= data['numPages']:
-                    data = get_json(species, page=i)
-                    save_json(species, data)
-                    i += 1
-                    bar.next()
-                print(f'\n{data["numPages"]} pages saved for {species}')
+        if _dir_size(species, 'json') < data['numPages']:
+            save_json(species, data)
+            print(f'Saved page 1 for {species}')
+            if data['numPages'] > 1:
+                i = 2
+                with Bar(
+                    f'Saving {data["numPages"]} pages for {species}',
+                    suffix='%(percent)d%%',
+                    max=data['numPages'] - 1,
+                ) as bar:
+                    while i <= data['numPages']:
+                        data = get_json(species, page=i)
+                        save_json(species, data)
+                        i += 1
+                        bar.next()
+                    print(f'\n{data["numPages"]} pages saved for {species}')
+        else:
+            print(
+                f'All JSON already exist for {species}. {_dir_size(species, "json")}/{data["numPages"]}'
+            )
 
 
 def download_audio_data():
@@ -63,36 +77,47 @@ def download_audio_data():
         data_p1 = read_json_file(
             f'{SPECIES_PATH}{species}/json/{species}_1.json'
         )
-        record_df = pd.DataFrame(data_p1['recordings'])
 
-        for i in range(2, data_p1['numPages'] + 1):
-            data = read_json_file(
-                f'{SPECIES_PATH}{species}/json/{species}_{i}.json'
+        if _dir_size(species) < int(data_p1['numRecordings']):
+            record_df = pd.DataFrame(data_p1['recordings'])
+
+            for i in range(2, data_p1['numPages'] + 1):
+                data = read_json_file(
+                    f'{SPECIES_PATH}{species}/json/{species}_{i}.json'
+                )
+                record_df = record_df.append(pd.DataFrame(data['recordings']))
+
+            record_df.to_csv(index=False)
+
+            url_list = []
+            for file in record_df['file'].tolist():
+                url_list.append(f'https:{file}')
+
+            with open(
+                f'{SPECIES_PATH}{species}/{species}_urls.txt', 'w+'
+            ) as f:
+                i = 1
+                print(f'Writing urls for {species} to file')
+                with Bar(
+                    f'Downloading MP3s for {species}',
+                    suffix='%(percent)d%%',
+                    max=len(url_list),
+                ) as bar:
+                    for url in url_list:
+                        if not os.path.isfile(
+                            f'{SPECIES_PATH}{species}/mp3/{species}_{i}.mp3'
+                        ):
+                            f.write(f'{url}\n')
+                            wget.download(
+                                url,
+                                out=f'{SPECIES_PATH}{species}/mp3/{species}_{i}.mp3',
+                            )
+                        i += 1
+                        bar.next()
+        else:
+            print(
+                f'All mp3 already exist for {species}. {_dir_size(species)}/{data_p1["numRecordings"]}'
             )
-            record_df = record_df.append(pd.DataFrame(data['recordings']))
-
-        record_df.to_csv(index=False)
-
-        url_list = []
-        for file in record_df['file'].tolist():
-            url_list.append(f'https:{file}')
-
-        with open(f'{SPECIES_PATH}{species}/{species}_urls.txt', 'w+') as f:
-            i = 1
-            print(f'Writing urls for {species} to file')
-            with Bar(
-                f'Downloading MP3s for {species}',
-                suffix='%(percent)d%%',
-                max=len(url_list),
-            ) as bar:
-                for url in url_list:
-                    f.write(f'{url}\n')
-                    wget.download(
-                        url,
-                        out=f'{SPECIES_PATH}{species}/mp3/{species}_{i}.mp3',
-                    )
-                    i += 1
-                    bar.next()
 
 
 def get_json(species: str, page: int = 1):
@@ -149,15 +174,17 @@ def main():
     """
     )
     species_count = 1
-    try:
-        species_count = int(args['--species'])
-    except TypeError:
-        print(f'ERROR: --species must be an integer')
-    except IndexError:
-        if args.get('--all-species'):
-            species_count = 100
-        else:
-            print(f'Desired Species count not provided. Using {species_count}')
+
+    if args['--all-species']:
+        species_count = 100
+
+    if args['--species']:
+        try:
+            species_count = int(args['--species'])
+        except TypeError:
+            print(f'ERROR: --species must be an integer')
+    else:
+        print(f'Desired Species count not provided. Using {species_count}')
 
     with open(args['<filename>']) as input_file:
         line = input_file.readline()

@@ -1,0 +1,5 @@
+pydub
+wget
+pandas
+docopt
+progress
