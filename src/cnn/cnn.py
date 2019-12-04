@@ -145,11 +145,12 @@ def main():
         cnn.py [options] <model_name>
 
     Options:
-        -b, --batch-size NUM
-        -e, --epochs NUM
-        -o, --optimizer STR
-        -l, --loss-func STR
-        -c, --classes NUM
+        -b, --batch-size NUM                Size of the batch
+        -e, --epochs NUM                    No. of epochs
+        -o, --optimizer STR                 Keras optimizer
+        -l, --loss-func STR                 Keras loss function
+        -c, --classes NUM                   No. of classes
+        -i, --image-shape row,col,channels  e.g. (64, 64, 3)
     """
     )
 
@@ -159,6 +160,7 @@ def main():
     global OPTIMIZER
     global LOSS_FUNCTION
     global NUM_CLASSES
+    global IMAGE_SHAPE
 
     MODEL_NAME = args['<model_name>']
 
@@ -177,6 +179,15 @@ def main():
     if args['--classes']:
         NUM_CLASSES = int(args['--classes'])
         print(f'Number of classes expected is {NUM_CLASSES}')
+
+    if args['--image-shape']:
+        try:
+            img_shape = args['--image-shape'].split(',')
+            if len(img_shape) != 3:
+                raise ValueError('--image-shape must be a 3x1 vector')
+            IMAGE_SHAPE = tuple(map(int, img_shape))
+        except Exception as ex:
+            print(f'ERROR: Invalid --image-shape. Reason="{ex}"')
     train_new_cnn()
 
 
