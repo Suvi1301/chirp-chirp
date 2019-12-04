@@ -80,7 +80,7 @@ def train_new_cnn():
 
 def save_class_indices(generator):
     try:
-        with open('models/{MODEL_NAME}_classes.json', 'w') as json_file:
+        with open(f'models/{MODEL_NAME}_classes.json', 'w') as json_file:
             json.dump(generator.class_indices, json_file, indent=4)
     except Exception as ex:
         print(
