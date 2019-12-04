@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 
 from keras.models import Sequential
@@ -56,6 +57,9 @@ def train_new_cnn():
         batch_size=BATCH_SIZE,
         class_mode='categorical',
     )
+
+    save_class_indices(training_set)
+
     testing_set = test_datagen.flow_from_directory(
         TESTING_DATA_PATH,
         target_size=(64, 64),
@@ -74,13 +78,26 @@ def train_new_cnn():
     save_model(model)
 
 
+def save_class_indices(generator):
+    try:
+        with open('models/{MODEL_NAME}_classes.json', 'w') as json_file:
+            json.dump(generator.class_indices, json_file, indent=4)
+    except Exception as ex:
+        print(
+            f'ERROR: Failed to save class indices for {MODEL_NAME}. Reason="{ex}"'
+        )
+
+
 def save_model(model):
     ''' Save trained model in JSON and H5PY '''
     model_json = model.to_json()
-    with open('models/{MODEL_NAME}.json', 'w') as json_file:
-        json_file.write(model_json)
-    model.save_weights('models/{MODEL_NAME}.h5')
-    print('Saved {MODEL_NAME} model.')
+    try:
+        with open(f'models/{MODEL_NAME}.json', 'w') as json_file:
+            json_file.write(model_json)
+        model.save_weights(f'models/{MODEL_NAME}.h5')
+        print(f'Saved {MODEL_NAME} model.')
+    except Exception as ex:
+        print(f'ERROR: Failed to save model "{MODEL_NAME}". Reason="{ex}"')
 
 
 def load_model(model_name: str):
