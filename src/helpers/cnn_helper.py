@@ -39,7 +39,7 @@ def copy(species: list, train_size: int = 5000, test_size: int = 1000):
                         )
                         i += 1
                     bar.next()
-                    if i >= train_size + test_size:
+                    if i > train_size + test_size:
                         break
                     bar.next()
                 except Exception as ex:
