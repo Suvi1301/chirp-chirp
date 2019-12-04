@@ -115,29 +115,6 @@ def load_model(model_name: str):
         print(f'ERROR: Cannot open {model_name} file. Reason="{ex}"')
 
 
-def bs():
-    img_gt = image.load_img(
-        'images/spectrograms/great_tit/great_tit_1865_0.jpg',
-        target_size=(64, 64),
-    )
-    img_gt = image.img_to_array(img_gt)
-    img_gt = np.expand_dims(img_gt, axis=0)
-
-    img_yh = image.load_img(
-        'images/spectrograms/yellowhammer/yellowhammer_1095_7.jpg',
-        target_size=(64, 64),
-    )
-    img_yh = image.img_to_array(img_yh)
-    img_yh = np.expand_dims(img_yh, axis=0)
-
-    img_cb = image.load_img(
-        'images/spectrograms/common_blackbird/common_blackbird_1_1.jpg',
-        target_size=(64, 64),
-    )
-    img_cb = image.img_to_array(img_cb)
-    img_cb = np.expand_dims(img_cb, axis=0)
-
-
 def main():
     args = docopt(
         """
