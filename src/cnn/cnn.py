@@ -22,6 +22,7 @@ METRICS = ['accuracy', 'categorical_accuracy']
 OPTIMIZER = 'adam'
 LOSS_FUNCTION = 'binary_crossentropy'
 NUM_CLASSES = 20
+FINAL_ACTIVATION = 'softmax'
 
 
 def train_new_cnn():
@@ -122,6 +123,7 @@ def main():
         cnn.py [options] <model_name>
 
     Options:
+        -a, --act-func STR                  Final Layer Activation function
         -b, --batch-size NUM                Size of the batch
         -e, --epochs NUM                    No. of epochs
         -o, --optimizer STR                 Keras optimizer
@@ -138,6 +140,7 @@ def main():
     global LOSS_FUNCTION
     global NUM_CLASSES
     global IMAGE_SHAPE
+    global FINAL_ACTIVATION
 
     MODEL_NAME = args['<model_name>']
 
@@ -155,7 +158,11 @@ def main():
 
     if args['--classes']:
         NUM_CLASSES = int(args['--classes'])
-        print(f'Number of classes expected is {NUM_CLASSES}')
+    print(f'Number of classes expected is {NUM_CLASSES}')
+
+    if args['--act-func']:
+        FINAL_ACTIVATION = args['--act-func']
+    print(f'Using Activation function {FINAL_ACTIVATION}')
 
     if args['--image-shape']:
         try:
