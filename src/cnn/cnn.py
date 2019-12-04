@@ -103,13 +103,13 @@ def save_model(model):
 def load_model(model_name: str):
     ''' Loads a saved model from JSON and H5PY '''
     try:
-        json_file = open('{model_name}.json', 'r')
+        json_file = open(f'{model_name}.json', 'r')
         model_json = json_file.read()
         json_file.close()
         model = model_from_json(model_json)
-        model.load_weights('{model_name}.h5')
+        model.load_weights(f'{model_name}.h5')
         model.compile(optimizer=OPTIMIZER, loss=LOSS_FUNCTION, metrics=METRICS)
-        print('Loaded {model_name} model.')
+        print(f'Loaded {model_name} model.')
         return model
     except Exception as ex:
         print(f'ERROR: Cannot open {model_name} file. Reason="{ex}"')
@@ -137,9 +137,10 @@ def bs():
     img_cb = image.img_to_array(img_cb)
     img_cb = np.expand_dims(img_cb, axis=0)
 
+
 def main():
     args = docopt(
-    """
+        """
     Usage:
         cnn.py [options] <model_name>
 
@@ -163,13 +164,13 @@ def main():
 
     if args['--batch-size']:
         BATCH_SIZE = int(args['--batch-size'])
-    
+
     if args['--epochs']:
         EPOCHS = int(args['--epochs'])
-    
+
     if args['--optimizer']:
         OPTIMIZER = args['--optimizer']
-    
+
     if args['--loss-func']:
         LOSS_FUNCTION = args['--loss-func']
 
@@ -177,6 +178,7 @@ def main():
         NUM_CLASSES = int(args['--classes'])
         print(f'Number of classes expected is {NUM_CLASSES}')
     train_new_cnn()
+
 
 if __name__ == "__main__":
     main()
