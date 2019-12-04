@@ -3,3 +3,9 @@ wget
 pandas
 docopt
 progress
+scipy
+matplotlib
+keras
+tensorflow
+moviepy
+pillow
