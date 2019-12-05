@@ -11,9 +11,9 @@ from progress.bar import Bar
 from moviepy.editor import AudioFileClip
 from pydub import AudioSegment
 
-SPECIES_RAW_AUDIO_PATH = "./../data/audio/raw/"
-SPECIES_PROCESSED_AUDIO_PATH = "./../data/audio/processed/"
-SPECTROGRAM_PATH = "./../data/images/spectrograms/"
+SPECIES_RAW_AUDIO_PATH = "./../../data/audio/raw/"
+SPECIES_PROCESSED_AUDIO_PATH = "./../../data/audio/processed/"
+SPECTROGRAM_PATH = "./../../data/images/spectrograms/"
 SPECIES_TO_CONVERT = []
 
 

@@ -1,0 +1,12 @@
+docopt
+flask
+h5py
+keras
+matplotlib
+moviepy
+pydub
+pillow
+progress
+scipy
+waitress
+wget

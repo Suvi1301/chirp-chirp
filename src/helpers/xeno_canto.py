@@ -12,7 +12,7 @@ from progress.bar import Bar
 XENO_CANTO_URL = 'https://www.xeno-canto.org/api/2/recordings?query='
 DESIRED_RECORDING_ATT = ('en', 'file', 'id', 'length', 'cnt')
 SPECIES_TO_DOWNLOAD = []
-SPECIES_PATH = './../data/audio/raw/'
+SPECIES_PATH = './../../data/audio/raw/'
 
 
 def _make_dir(dir: str):

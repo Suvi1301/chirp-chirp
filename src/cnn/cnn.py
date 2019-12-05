@@ -12,8 +12,8 @@ from keras.preprocessing import image
 from keras.preprocessing.image import ImageDataGenerator
 from docopt import docopt
 
-TRAINING_DATA_PATH = './../data/images/training_data/'
-TESTING_DATA_PATH = './../data/images/testing_data/'
+TRAINING_DATA_PATH = './../../data/images/training_data/'
+TESTING_DATA_PATH = './../../data/images/testing_data/'
 IMAGE_SHAPE = (64, 64, 3)
 BATCH_SIZE = 32
 EPOCHS = 25
