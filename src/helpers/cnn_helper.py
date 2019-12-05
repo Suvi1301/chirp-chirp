@@ -3,7 +3,7 @@ import os
 from docopt import docopt
 from progress.bar import Bar
 
-IMAGES_PATH = './../data/images/'
+IMAGES_PATH = './../../data/images/'
 
 
 def _make_dir(dir: str):
