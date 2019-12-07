@@ -60,6 +60,7 @@ def train_new_cnn():
     )
 
     save_class_indices(training_set)
+    save_model_params()
 
     testing_set = test_datagen.flow_from_directory(
         TESTING_DATA_PATH,
@@ -89,6 +90,24 @@ def save_class_indices(generator):
         )
 
 
+def save_model_params():
+
+    params = {
+        'OPTIMIZER': OPTIMIZER,
+        'LOSS_FUNC': LOSS_FUNCTION,
+        'ACTIV_FUNC': FINAL_ACTIVATION,
+        'INPUT_SHAPE': (IMAGE_SHAPE[0], IMAGE_SHAPE[1]),
+        'EPOCHS': EPOCHS
+    }
+    try:
+        with open(f'models/{MODEL_NAME}_params.json', 'w') as json_file:
+            json.dump(params, json_file, indent=4)
+    except Exception as ex:
+        print(
+            f'ERROR: Failed to save model params for {MODEL_NAME}. Reason="{ex}"'
+        )
+
+
 def save_model(model):
     ''' Save trained model in JSON and H5PY '''
     model_json = model.to_json()
@@ -99,21 +118,6 @@ def save_model(model):
         print(f'Saved {MODEL_NAME} model.')
     except Exception as ex:
         print(f'ERROR: Failed to save model "{MODEL_NAME}". Reason="{ex}"')
-
-
-def load_model(model_name: str):
-    ''' Loads a saved model from JSON and H5PY '''
-    try:
-        json_file = open(f'{model_name}.json', 'r')
-        model_json = json_file.read()
-        json_file.close()
-        model = model_from_json(model_json)
-        model.load_weights(f'{model_name}.h5')
-        model.compile(optimizer=OPTIMIZER, loss=LOSS_FUNCTION, metrics=METRICS)
-        print(f'Loaded {model_name} model.')
-        return model
-    except Exception as ex:
-        print(f'ERROR: Cannot open {model_name} file. Reason="{ex}"')
 
 
 def main():
