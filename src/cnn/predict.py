@@ -74,7 +74,9 @@ def _load_model_params():
     try:
         with open(f'{MODEL_PATH}{MODEL_NAME}_params.json') as json_file:
             MODEL_PARAMS = json.load(json_file)
-        LOG.info(f'Successfully loaded the model parameters for "{MODEL_NAME}"')
+        LOG.info(
+            f'Successfully loaded the model parameters for "{MODEL_NAME}"'
+        )
     except Exception as ex:
         LOG.error(f'Failed to read model params. Reason="{ex}"')
 
@@ -87,7 +89,11 @@ def _load_model():
         json_file.close()
         model = model_from_json(model_json)
         model.load_weights(f'{MODEL_PATH}{MODEL_NAME}.h5')
-        model.compile(optimizer=MODEL_PARAMS['OPTIMIZER'], loss=MODEL_PARAMS['LOSS_FUNC'], metrics=['accuracy', 'categorical_accuracy'])
+        model.compile(
+            optimizer=MODEL_PARAMS['OPTIMIZER'],
+            loss=MODEL_PARAMS['LOSS_FUNC'],
+            metrics=['accuracy', 'categorical_accuracy'],
+        )
         LOG.info(f'Loaded {MODEL_NAME} model')
         return model
     except Exception as ex:
@@ -96,7 +102,10 @@ def _load_model():
 
 def _classify(model, filename: str, path: str):
     try:
-        img = image.load_img(f'{path}/{filename}.jpg', target_size=tuple(MODEL_PARAMS['INPUT_SHAPE']))
+        img = image.load_img(
+            f'{path}/{filename}.jpg',
+            target_size=tuple(MODEL_PARAMS['INPUT_SHAPE']),
+        )
         img = image.img_to_array(img)
         img = img / 255
         img = np.expand_dims(img, axis=0)
@@ -135,6 +144,7 @@ def predict_batch():
 def main():
     # TODO: For testing the model with batch test data
     pass
+
 
 if __name__ == "__main__":
     main()

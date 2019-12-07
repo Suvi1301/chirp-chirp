@@ -97,7 +97,7 @@ def save_model_params():
         'LOSS_FUNC': LOSS_FUNCTION,
         'ACTIV_FUNC': FINAL_ACTIVATION,
         'INPUT_SHAPE': (IMAGE_SHAPE[0], IMAGE_SHAPE[1]),
-        'EPOCHS': EPOCHS
+        'EPOCHS': EPOCHS,
     }
     try:
         with open(f'models/{MODEL_NAME}_params.json', 'w') as json_file:
