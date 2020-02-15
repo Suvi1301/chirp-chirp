@@ -15,7 +15,7 @@ LOG = logging.getLogger('waitress')
 LOG.setLevel(logging.DEBUG)
 
 APP = Flask(__name__)
-ALLOWED_EXTENSIONS = set(['mp3'])
+ALLOWED_EXTENSIONS = set(['mp3', 'm4a'])
 
 
 def is_file_audio(filename: str):
@@ -52,13 +52,13 @@ def predict_bird():
         LOG.info(f'Uploaded {filename}.mp3 successfully')
         try:
             result = predict_one(filename, APP.config['UPLOAD_FOLDER'])
-            cleanup(filename, APP.config['UPLOAD_FOLDER'])
             resp = jsonify({'result': str(result)})
             resp.status_code = 200
         except Exception as ex:
             LOG.error(f'Failed to predict for {filename}. Reason="{ex}"')
             resp = jsonify({'message': 'Internal Server Error'})
             resp.status_code = 500
+        cleanup(filename, APP.config['UPLOAD_FOLDER'])
         return resp
 
     else:
