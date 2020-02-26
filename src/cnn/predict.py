@@ -7,6 +7,8 @@ import os
 from keras.models import model_from_json
 from keras.preprocessing import image
 from moviepy.editor import AudioFileClip
+from keras.preprocessing.image import ImageDataGenerator
+from docopt import docopt
 
 
 LOG = logging.getLogger('waitress')
@@ -18,6 +20,8 @@ MODEL_PATH = f'./cnn/models/{MODEL_NAME}/'
 MODEL_PARAMS = dict()
 SPECTROGRAM_PARAMS = dict()
 MODEL_CLASSES = dict()
+
+TEST_DATA_PATH = './../data/images/testing_data'
 
 
 def _load_spectrogram_params():
@@ -137,13 +141,55 @@ def predict_one(filename: str, path: str):
 
 
 def predict_batch():
-    # TODO: Write method to batch test data and return metrics for model
-    pass
+    _load_model_params()
+    _load_classes_idx()
+    test_datagen = ImageDataGenerator(rescale=1.0 / 255)
+    testing_set = test_datagen.flow_from_directory(
+        TEST_DATA_PATH,
+        target_size=(64, 64),
+        batch_size=32,
+        class_mode='categorical',
+    )
+    model = _load_model()
+    evaluation = model.evaluate_generator(testing_set, verbose=1)
+    result = {
+        'loss': evaluation[0],
+        'accuracy': evaluation[1],
+        'categorical_accuracy': evaluation[2],
+    }
+    try:
+        with open(
+            f'{MODEL_PATH}{MODEL_NAME}_evaluation.json', 'w'
+        ) as json_file:
+            json.dump(result, json_file, indent=4)
+    except Exception as ex:
+        print(
+            f'ERROR: Failed to save evaluation for {MODEL_NAME}. Reason="{ex}"'
+        )
 
 
 def main():
-    # TODO: For testing the model with batch test data
-    pass
+    args = docopt(
+        """
+    Usage:
+        cnn.py [options] <model_name>
+
+    Options:
+        --pred-batch                  Predict a batch
+    """
+    )
+
+    global MODEL_NAME
+    global MODEL_PATH
+
+    MODEL_NAME = args['<model_name>']
+
+    if args['--pred-batch']:
+        MODEL_NAME = args['<model_name>']
+        MODEL_PATH = f'./cnn/models/{MODEL_NAME}/'
+        predict_batch()
+    else:
+        print('No action option specified')
 
 
 if __name__ == "__main__":
