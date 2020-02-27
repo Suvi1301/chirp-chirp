@@ -3,6 +3,7 @@ import numpy as np
 import logging
 import matplotlib.pyplot as plt
 import os
+import math
 
 from keras.models import model_from_json
 from keras.preprocessing import image
@@ -104,6 +105,18 @@ def _load_model():
         LOG.error(f'Cannot open {MODEL_NAME} file. Reason="{ex}"')
 
 
+def _extract_result(best_idx: int, probs: np.array):
+    best_prob = probs[best_idx]
+    probs = np.subtract(best_prob, probs)
+    close_idx = dict()
+    for i in range(probs.size):
+        if probs[i] <= 0.15:
+            close_idx[MODEL_CLASSES[i]] = math.floor(
+                100 * (best_prob - probs[i])
+            )
+    return close_idx
+
+
 def _classify(model, filename: str, path: str):
     try:
         img = image.load_img(
@@ -115,11 +128,8 @@ def _classify(model, filename: str, path: str):
         img = np.expand_dims(img, axis=0)
         pred_class_idx = model.predict_classes(img)
         pred_prob = model.predict_proba(img)
-        result = {
-            'class': MODEL_CLASSES[pred_class_idx[0]],
-            'prob': pred_prob[0][pred_class_idx[0]],
-        }
-        return result
+        result = _extract_result(pred_class_idx, pred_prob[0])
+        return {"result": result}
     except Exception as ex:
         LOG.error(f'Error classifying. Reason="{ex}"')
 

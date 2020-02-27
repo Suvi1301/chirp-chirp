@@ -52,7 +52,7 @@ def predict_bird():
         LOG.info(f'Uploaded {filename}.mp3 successfully')
         try:
             result = predict_one(filename, APP.config['UPLOAD_FOLDER'])
-            resp = jsonify({'result': str(result)})
+            resp = jsonify(result)
             resp.status_code = 200
         except Exception as ex:
             LOG.error(f'Failed to predict for {filename}. Reason="{ex}"')
