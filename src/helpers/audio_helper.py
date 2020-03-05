@@ -222,8 +222,14 @@ def spectrogram(
         else:
             return NotImplementedError()
         fig = plt.figure()
+        vmin = 20 * np.log10(np.max(audio_data)) - 100
         plt.specgram(
-            audio_data, Fs=frame_rate, NFFT=nfft, window=window, cmap='inferno'
+            audio_data,
+            Fs=frame_rate,
+            NFFT=nfft,
+            window=window,
+            cmap='inferno',
+            vmin=vmin,
         )
         fig.savefig(f'{SPECTROGRAM_PATH}{species}/{filename}.jpg')
         plt.close(fig)

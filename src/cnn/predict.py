@@ -42,6 +42,7 @@ def _spectrogram(filename: str, path: str):
         audio = AudioFileClip(f'{path}/{filename}.mp3')
         audio_data = audio.to_soundarray()
         audio_data = audio_data[:, 0]
+        vmin = 20 * np.log10(np.max(audio_data)) - 100
         fig = plt.figure()
         plt.specgram(
             audio_data,
@@ -49,6 +50,7 @@ def _spectrogram(filename: str, path: str):
             NFFT=SPECTROGRAM_PARAMS['NFFT'],
             window=np.hamming(512),
             cmap='inferno',
+            vmin=vmin
         )
         fig.savefig(f'{path}/{filename}.jpg')
         plt.close(fig)
