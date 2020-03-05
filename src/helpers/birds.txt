@@ -3,7 +3,6 @@ common_blackbird
 common_chaffinch
 common_chiffchaff
 european_robin
-willow_warbler
 eurasian_blue_tit
 eurasian_blackcap
 song_thrush
