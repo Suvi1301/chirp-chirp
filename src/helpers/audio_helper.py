@@ -10,6 +10,7 @@ from docopt import docopt
 from progress.bar import Bar
 from moviepy.editor import AudioFileClip
 from pydub import AudioSegment
+from pydub import silence
 
 SPECIES_RAW_AUDIO_PATH = "./../../data/audio/raw/"
 SPECIES_PROCESSED_AUDIO_PATH = "./../../data/audio/processed/"
@@ -273,13 +274,55 @@ def generate_spectrograms(
                 bar.next()
 
 
+def _is_audio_good(species: str, filename: str):
+    audio = read_file(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}')
+    silent_intervals = silence.detect_silence(audio, min_silence_len=1000, silence_thresh=audio.dBFS-audio.max_dBFS-16)
+    duration = audio.duration_seconds * 1000
+    if len(silent_intervals) == 1:
+        return ((silent_intervals[0][1] - silent_intervals[0][0]) / duration) < 0.9
+    elif len(silent_intervals) > 1:
+        total_silence = 0
+        for interval in silent_intervals:
+            total_silence += interval[1] - interval[0]
+        return total_silence / duration < 0.8
+    return True
+
+
+def get_bad_audio():
+    for species in SPECIES_TO_CONVERT:
+        bad_files = []
+        file_count = _dir_size(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3')
+        with Bar(
+            f'Analysing {species} audio files',
+            suffix='%(percent)d%%',
+            max=file_count,
+        ) as bar:
+            for file in os.listdir(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3'):
+                if file.endswith('.mp3'):
+                    if not _is_audio_good(species, file[:-4]):
+                        bad_files.append(file)
+                bar.next()
+            result = {
+                'species': species,
+                'bad_count': len(bad_files),
+                'file': bad_files,
+            }
+            try:
+                with open(f'{SPECIES_RAW_AUDIO_PATH}/{species}/bad_audio.json', 'w') as json_file:
+                    json.dump(result, json_file, indent=4)
+            except Exception as ex:
+                print(
+                    f'ERROR: Failed to save bad file analysis for {species}. Reason="{ex}"'
+                )
+
+
 def main():
     args = docopt(
         """
     Usage:
         audio_helper.py [options] <filename> <convert>
     
-        <convert>: "wav", "spec-mp3", "spec-wav", "wave", "norm", "split"
+        <convert>: "wav", "spec-mp3", "spec-wav", "wave", "norm", "split", "anal"
     Options:
         --species NUM       No. of Species
         --all-species       For all species in input file
@@ -296,6 +339,7 @@ def main():
         'wave',
         'norm',
         'split',
+        'anal'
     ):
         print('Invalid argument for <convert>')
         return
@@ -334,6 +378,8 @@ def main():
         if args['--split-interval']:
             split_interval = int(args['--split-interval'])
         process_split(split_interval)
+    elif args['<convert>'] == 'anal':
+        get_bad_audio()
     else:
         pass
         # TODO: Generate Wave
