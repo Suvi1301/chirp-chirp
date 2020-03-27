@@ -158,7 +158,7 @@ def predict_batch():
     test_datagen = ImageDataGenerator(rescale=1.0 / 255)
     testing_set = test_datagen.flow_from_directory(
         TEST_DATA_PATH,
-        target_size=(64, 64),
+        target_size=(256, 256),
         batch_size=32,
         class_mode='categorical',
     )

@@ -14,7 +14,7 @@ from docopt import docopt
 
 TRAINING_DATA_PATH = './../../data/images/training_data/'
 TESTING_DATA_PATH = './../../data/images/testing_data/'
-IMAGE_SHAPE = (64, 64, 3)
+IMAGE_SHAPE = (256, 256, 3)
 BATCH_SIZE = 32
 EPOCHS = 25
 MODEL_NAME = ''
@@ -54,7 +54,7 @@ def train_new_cnn():
 
     training_set = train_datagen.flow_from_directory(
         TRAINING_DATA_PATH,
-        target_size=(64, 64),
+        target_size=(256, 256),
         batch_size=BATCH_SIZE,
         class_mode='categorical',
     )
@@ -64,7 +64,7 @@ def train_new_cnn():
 
     testing_set = test_datagen.flow_from_directory(
         TESTING_DATA_PATH,
-        target_size=(64, 64),
+        target_size=(256, 256),
         batch_size=BATCH_SIZE,
         class_mode='categorical',
     )
