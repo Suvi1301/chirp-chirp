@@ -1,0 +1,69 @@
+{
+    "total": {
+        "great_tit": [32403, 14390, 44],
+        "common_blackbird": [45237, 20934, 46],
+        "common_chaffinch": [26983, 13049, 48],
+        "common_chiffchaff": [20797, 9663, 46],
+        "european_robin": [27621, 13027, 47],
+        "eurasian_blackcap": [26353, 9844, 37],
+        "song_thrush": [43587, 14116, 32],
+        "yellowhammer": [21076, 12347, 58],
+        "eurasian_wren": [14550, 4147, 28],
+        "common_whitethroat": [18082, 8028, 44],
+        "corn_bunting": [16987, 9502, 55],
+        "eurasian_tree_sparrow": [14486, 5167, 35],
+        "red_crossbill": [11404, 6052, 53],
+        "great_spotted_woodpecker": [8248, 3468, 42],
+        "common_nightingale": [14792, 3796, 25],
+        "tawny_owl": [11723, 8418, 71], - 3305
+        "coal_tit": [7862, 3922, 49], - 3940
+        "eurasian_skylark": [7665, 3607, 47],
+        "eurasian_blue_tit": [17922, 3607, 20]
+    },
+
+    "chosen_badly": {
+        "great_tit": [2235, 44.7, 424, 42.4],
+        "common_blackbird": [2375, 47.5, 479, 47.9],
+        "common_chaffinch": [2397, 47.94, 490, 49.0],
+        "common_chiffchaff": [2341, 46.82, 497, 49.7],
+        "european_robin": [2370, 47.4, 466, 46.6],
+        "eurasian_blackcap": [1868, 37.36, 398, 39.8],
+        "song_thrush": [1624, 32.48, 326, 32.6],
+        "yellowhammer": [2976, 59.52, 595, 59.5],
+        "eurasian_wren": [1420, 28.4, 287, 28.7],
+        "common_whitethroat": [2155, 43.1, 454, 45.4],
+        "corn_bunting": [2795, 55.9, 545, 54.5],
+        "eurasian_tree_sparrow": [1784, 35.68, 334, 33.4],
+        "red_crossbill": [2634, 52.68, 509, 50.9],
+        "great_spotted_woodpecker": [2074, 41.48, 427, 42.7],
+        "common_nightingale": [1226, 24.52, 259, 25.9],
+        "tawny_owl": [3563, 71.26, 739, 73.9],
+        "coal_tit": [2501, 50.02, 481, 48.1],
+        "eurasian_skylark": [2322, 46.44, 487, 48.7],
+        "eurasian_blue_tit": [2399, 47.98, 483, 48.3]
+    },
+
+    "chosen_good": {
+        "great_tit": [0, 0.0, 0, 0.0],
+        "common_blackbird": [0, 0.0, 0, 0.0],
+        "common_chaffinch": [0, 0.0, 0, 0.0],
+        "common_chiffchaff": [0, 0.0, 0, 0.0],
+        "european_robin": [0, 0.0, 0, 0.0],
+        "eurasian_blackcap": [0, 0.0, 0, 0.0],
+        "song_thrush": [0, 0.0, 0, 0.0],
+        "yellowhammer": [0, 0.0, 0, 0.0],
+        "eurasian_wren": [0, 0.0, 0, 0.0],
+        "common_whitethroat": [0, 0.0, 0, 0.0],
+        "corn_bunting": [0, 0.0, 0, 0.0],
+        "eurasian_tree_sparrow": [0, 0.0, 0, 0.0],
+        "red_crossbill": [0, 0.0, 0, 0.0],
+        "great_spotted_woodpecker": [0, 0.0, 0, 0.0],
+        "common_nightingale": [0, 0.0, 0, 0.0],
+        "tawny_owl": [0, 0.0, 695, 69.5],
+        "coal_tit": [0, 0.0, 60, 6.0],
+        "eurasian_skylark": [0, 0.0, 0, 0.0]
+    }
+
+    
+
+ }

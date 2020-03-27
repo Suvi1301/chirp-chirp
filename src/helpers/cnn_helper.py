@@ -1,4 +1,5 @@
 import os
+import json
 
 from docopt import docopt
 from progress.bar import Bar
@@ -17,9 +18,21 @@ def _make_dir(dir: str):
 
 
 def copy(species: list, train_size: int = 5000, test_size: int = 1000):
+    def read_json_file(filename: str):
+        ''' Reads a given JSON file into dict '''
+        json_file = open(filename)
+        data = json.load(json_file)
+        json_file.close()
+        return data
+
     for spec in species:
         _make_dir(f'{IMAGES_PATH}training_data/{spec}')
         _make_dir(f'{IMAGES_PATH}testing_data/{spec}')
+
+        bad_data = read_json_file(
+            f'./../../data/audio/raw/{spec}/bad_audio.json'
+        )
+        bad_files = bad_data["file"]
         i = 1
         with Bar(
             f'Copying Training and Testing dataset for {spec}',
@@ -28,22 +41,58 @@ def copy(species: list, train_size: int = 5000, test_size: int = 1000):
         ) as bar:
             for file in os.listdir(f'{IMAGES_PATH}spectrograms/{spec}'):
                 try:
-                    if file.endswith('.jpg') and i <= train_size:
-                        os.system(
-                            f'cp {IMAGES_PATH}spectrograms/{spec}/{file} {IMAGES_PATH}training_data/{spec}/{file}'
-                        )
-                        i += 1
-                    else:
-                        os.system(
-                            f'cp {IMAGES_PATH}spectrograms/{spec}/{file} {IMAGES_PATH}testing_data/{spec}/{file}'
-                        )
-                        i += 1
-                    bar.next()
-                    if i > train_size + test_size:
-                        break
-                    bar.next()
+                    mp3_file = f'{file[:-3]}mp3'
+                    if mp3_file not in bad_files:
+                        if file.endswith('.jpg') and i <= train_size:
+                            os.system(
+                                f'cp {IMAGES_PATH}spectrograms/{spec}/{file} {IMAGES_PATH}training_data/{spec}/{file}'
+                            )
+                            i += 1
+                        else:
+                            os.system(
+                                f'cp {IMAGES_PATH}spectrograms/{spec}/{file} {IMAGES_PATH}testing_data/{spec}/{file}'
+                            )
+                            i += 1
+                        bar.next()
+                        if i > train_size + test_size:
+                            break
+                        bar.next()
                 except Exception as ex:
                     print(f'ERROR: Cannot copy file. Reason="{ex}"')
+
+
+def get_bad_percentage(species):
+    def read_json_file(filename: str):
+        ''' Reads a given JSON file into dict '''
+        json_file = open(filename)
+        data = json.load(json_file)
+        json_file.close()
+        return data
+
+    bad_data = read_json_file(
+        f'./../../data/audio/raw/{species}/bad_audio.json'
+    )
+    bad_files = bad_data["file"]
+    print(bad_data['bad_count'])
+    bad_train_matches = 0
+    bad_test_matches = 0
+    total_files = 0
+    for file in os.listdir(f'./../../data/images/training_data/{species}'):
+        try:
+            file = f'{file[:-3]}mp3'
+            if file in bad_files:
+                bad_train_matches += 1
+        except Exception as ex:
+            print(f'ERROR: couldnt check file {file}')
+
+    for file in os.listdir(f'./images/testing_data/{species}'):
+        try:
+            file = f'{file[:-3]}mp3'
+            if file in bad_files:
+                bad_test_matches += 1
+        except Exception as ex:
+            print(f'ERROR: couldnt check file {file}')
+    return (bad_train_matches, bad_test_matches)
 
 
 def main():
@@ -92,7 +141,7 @@ def main():
 
     if args['--test-size']:
         try:
-            train_size = int(args['--test-size'])
+            test_size = int(args['--test-size'])
         except TypeError:
             print(f'ERROR: --test-size must be an integer')
 

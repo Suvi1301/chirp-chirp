@@ -276,15 +276,25 @@ def generate_spectrograms(
 
 def _is_audio_good(species: str, filename: str):
     audio = read_file(f'{SPECIES_RAW_AUDIO_PATH}{species}/mp3/{filename}')
-    silent_intervals = silence.detect_silence(audio, min_silence_len=1000, silence_thresh=audio.dBFS-audio.max_dBFS-16)
-    duration = audio.duration_seconds * 1000
-    if len(silent_intervals) == 1:
-        return ((silent_intervals[0][1] - silent_intervals[0][0]) / duration) < 0.9
-    elif len(silent_intervals) > 1:
-        total_silence = 0
-        for interval in silent_intervals:
-            total_silence += interval[1] - interval[0]
-        return total_silence / duration < 0.8
+    try:
+        silent_intervals = silence.detect_silence(
+            audio,
+            min_silence_len=1000,
+            silence_thresh=audio.dBFS - audio.max_dBFS - 16,
+        )
+        duration = audio.duration_seconds * 1000
+        if len(silent_intervals) == 1:
+            return (
+                (silent_intervals[0][1] - silent_intervals[0][0]) / duration
+            ) < 0.9
+        elif len(silent_intervals) > 1:
+            total_silence = 0
+            for interval in silent_intervals:
+                total_silence += interval[1] - interval[0]
+            return total_silence / duration < 0.8
+    except Exception as ex:
+        print(f'Failed to check audio {filename}. Reason="{ex}"')
+        return False
     return True
 
 
@@ -308,7 +318,9 @@ def get_bad_audio():
                 'file': bad_files,
             }
             try:
-                with open(f'{SPECIES_RAW_AUDIO_PATH}/{species}/bad_audio.json', 'w') as json_file:
+                with open(
+                    f'{SPECIES_RAW_AUDIO_PATH}/{species}/bad_audio.json', 'w'
+                ) as json_file:
                     json.dump(result, json_file, indent=4)
             except Exception as ex:
                 print(
@@ -339,7 +351,7 @@ def main():
         'wave',
         'norm',
         'split',
-        'anal'
+        'anal',
     ):
         print('Invalid argument for <convert>')
         return
