@@ -1,0 +1,17 @@
+{
+    "common_blackbird": 0,
+    "common_chaffinch": 1,
+    "common_chiffchaff": 2,
+    "common_nightingale": 3,
+    "common_whitethroat": 4,
+    "corn_bunting": 5,
+    "eurasian_blackcap": 6,
+    "eurasian_blue_tit": 7,
+    "eurasian_tree_sparrow": 8,
+    "eurasian_wren": 9,
+    "european_robin": 10,
+    "great_tit": 11,
+    "red_crossbill": 12,
+    "song_thrush": 13,
+    "yellowhammer": 14
+}

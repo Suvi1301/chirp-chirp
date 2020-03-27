@@ -1,0 +1,10 @@
+{
+    "OPTIMIZER": "adam",
+    "LOSS_FUNC": "binary_crossentropy",
+    "ACTIV_FUNC": "softmax",
+    "INPUT_SHAPE": [
+        256,
+        256
+    ],
+    "EPOCHS": 25
+}

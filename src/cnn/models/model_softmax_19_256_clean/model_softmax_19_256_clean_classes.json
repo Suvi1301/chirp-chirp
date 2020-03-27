@@ -1,0 +1,21 @@
+{
+    "coal_tit": 0,
+    "common_blackbird": 1,
+    "common_chaffinch": 2,
+    "common_chiffchaff": 3,
+    "common_nightingale": 4,
+    "common_whitethroat": 5,
+    "corn_bunting": 6,
+    "eurasian_blackcap": 7,
+    "eurasian_blue_tit": 8,
+    "eurasian_skylark": 9,
+    "eurasian_tree_sparrow": 10,
+    "eurasian_wren": 11,
+    "european_robin": 12,
+    "great_spotted_woodpecker": 13,
+    "great_tit": 14,
+    "red_crossbill": 15,
+    "song_thrush": 16,
+    "tawny_owl": 17,
+    "yellowhammer": 18
+}
